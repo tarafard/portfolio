@@ -1,25 +1,84 @@
-/*===== MENU SHOW =====*/ 
-const showMenu = (toggleId, navId) => {
-    const toggle = document.getElementById(toggleId),
-    nav = document.getElementById(navId)
+// /*===== MENU SHOW =====*/ 
+// const showMenu = (toggleId, navId) => {
+//     const toggle = document.getElementById(toggleId),
+//     nav = document.getElementById(navId)
 
-    if(toggle && nav){
-        toggle.addEventListener('click', ()=>{
-            nav.classList.toggle('show')
-        })
+//     if(toggle && nav){
+//         toggle.addEventListener('click', ()=>{
+//             nav.classList.toggle('show')
+//         })
+//     }
+// }
+// showMenu('nav-toggle','nav-menu')
+
+// /*==================== REMOVE MENU MOBILE ====================*/
+// const navLink = document.querySelectorAll('.nav__link')
+
+// function linkAction(){
+//     const navMenu = document.getElementById('nav-menu')
+//     // When we click on each nav__link, we remove the show-menu class
+//     navMenu.classList.remove('show')
+// }
+// navLink.forEach(n => n.addEventListener('click', linkAction))
+
+
+
+
+/*===== MENU TOGGLE & CLOSE WHEN CLICKING OUTSIDE =====*/
+const setupMobileMenu = () => {
+    const navToggle = document.getElementById('nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    const navLinks = document.querySelectorAll('.nav__link');
+    
+    if (navToggle && navMenu) {
+        // Toggle menu when clicking the hamburger button
+        navToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMenu.classList.toggle('show');
+        });
+
+        // Close menu when clicking on nav links
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('show');
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const isClickInsideMenu = navMenu.contains(e.target);
+            const isClickOnToggle = navToggle.contains(e.target);
+            
+            if (!isClickInsideMenu && !isClickOnToggle && navMenu.classList.contains('show')) {
+                navMenu.classList.remove('show');
+            }
+        });
+
+        // Prevent menu from closing when clicking between links (on menu background)
+        navMenu.addEventListener('click', (e) => {
+            if (e.target === navMenu) { // Only if clicking directly on menu (not links)
+                e.stopPropagation();
+            }
+        });
     }
-}
-showMenu('nav-toggle','nav-menu')
+};
 
-/*==================== REMOVE MENU MOBILE ====================*/
-const navLink = document.querySelectorAll('.nav__link')
+// Initialize the mobile menu
+setupMobileMenu();
 
-function linkAction(){
-    const navMenu = document.getElementById('nav-menu')
-    // When we click on each nav__link, we remove the show-menu class
-    navMenu.classList.remove('show')
-}
-navLink.forEach(n => n.addEventListener('click', linkAction))
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*==================== SCROLL SECTIONS ACTIVE LINK ====================*/
 const sections = document.querySelectorAll('section[id]')
@@ -96,9 +155,17 @@ function toggleDarkMode() {
 applyInitialTheme();
 darkModeToggle.addEventListener('click', toggleDarkMode);
 
-
-
-
+/*===== DEBOUNCE FUNCTION =====*/
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            func.apply(context, args);
+        }, wait);
+    };
+}
 
 /*===== SLIDER FUNCTIONALITY =====*/
 document.addEventListener('DOMContentLoaded', function() {
@@ -122,6 +189,13 @@ document.addEventListener('DOMContentLoaded', function() {
         let itemsPerSlide = getItemsPerSlide();
         let isAnimating = false;
         let sliderWidth = 0;
+        
+        // Touch handling variables
+        let isDragging = false;
+        let startPos = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+        let animationID = 0;
         
         // Get ALL cards from the original HTML structure
         const originalCards = Array.from(sliderTrack.querySelectorAll('.card'));
@@ -204,21 +278,68 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => { isAnimating = false; }, 500);
         });
         
-        // Handle window resize
-        window.addEventListener('resize', function() {
+        // Handle window resize with debounce
+        window.addEventListener('resize', debounce(function() {
             const newItemsPerSlide = getItemsPerSlide();
             if (newItemsPerSlide !== itemsPerSlide) {
                 itemsPerSlide = newItemsPerSlide;
                 currentSlide = 0;
                 filterCards();
             }
-        });
+        }, 250));
+        
+        // Touch event listeners
+        sliderContainer.addEventListener('touchstart', touchStart, { passive: true });
+        sliderContainer.addEventListener('touchmove', touchMove, { passive: false });
+        sliderContainer.addEventListener('touchend', touchEnd);
+        
+        function touchStart(e) {
+            startPos = e.touches[0].clientX;
+            isDragging = true;
+            animationID = requestAnimationFrame(animation);
+            sliderTrack.style.transition = 'none';
+        }
+        
+        function touchMove(e) {
+            if (!isDragging) return;
+            const currentPosition = e.touches[0].clientX;
+            currentTranslate = prevTranslate + currentPosition - startPos;
+            e.preventDefault(); // Prevent scrolling while dragging
+        }
+        
+        function touchEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            cancelAnimationFrame(animationID);
+            
+            const movedBy = currentTranslate - prevTranslate;
+            
+            // Add resistance at edges
+            if ((currentSlide === 0 && movedBy > 0) || 
+                (currentSlide === filteredSlides.length - 1 && movedBy < 0)) {
+                // Elastic bounce effect
+                sliderTrack.style.transition = 'transform 0.3s ease-out';
+                sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+            } else {
+                if (movedBy < -50) nextBtn.click();
+                if (movedBy > 50) prevBtn.click();
+            }
+            
+            setTimeout(() => {
+                sliderTrack.style.transition = 'transform 0.5s ease';
+            }, 300);
+        }
+        
+        function animation() {
+            sliderTrack.style.transform = `translateX(calc(-${currentSlide * 100}% + ${currentTranslate}px)`;
+            animationID = requestAnimationFrame(animation);
+        }
         
         function getItemsPerSlide() {
             const width = window.innerWidth;
-            if (width <= 600) return 1;
-            if (width <= 900) return 2;
-            return 3;
+            if (width <= 600) return 1;  // 1 item on mobile
+            if (width <= 900) return 2;  // 2 items on tablet
+            return 3;                    // 3 items on desktop
         }
         
         function filterCards() {
@@ -236,46 +357,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 const noResults = document.createElement('div');
                 noResults.className = 'no-results';
                 noResults.textContent = 'No items found for this filter';
-                noResults.style.gridColumn = '1 / -1';
                 sliderTrack.appendChild(noResults);
                 filteredSlides.push(noResults);
                 updateSlider();
-                updateButtonStates();
                 return;
             }
             
-            // Calculate how many slides we need
-            const totalSlides = Math.ceil(visibleCards.length / itemsPerSlide);
-            
-            // Create slides
-            for (let i = 0; i < totalSlides; i++) {
-                const slide = document.createElement('div');
-                slide.className = 'slider-slide';
-                
-                // Set grid layout based on items per slide
-                slide.style.display = 'grid';
-                slide.style.gap = '2rem';
-                slide.style.gridTemplateColumns = `repeat(${itemsPerSlide}, 1fr)`;
-                
-                // Add cards to this slide
-                const startIndex = i * itemsPerSlide;
-                const endIndex = startIndex + itemsPerSlide;
-                const slideCards = visibleCards.slice(startIndex, endIndex);
-                
-                slideCards.forEach(card => {
+            // Mobile-specific layout
+            if (window.innerWidth <= 600) {
+                // Create one slide per card for better mobile touch control
+                visibleCards.forEach(card => {
+                    const slide = document.createElement('div');
+                    slide.className = 'slider-slide';
+                    slide.style.display = 'grid';
+                    slide.style.gridTemplateColumns = '1fr';
+                    slide.style.gap = '1rem';
+                    
                     const cardClone = card.cloneNode(true);
                     slide.appendChild(cardClone);
+                    sliderTrack.appendChild(slide);
+                    filteredSlides.push(slide);
                 });
+            } else {
+                // Original tablet/desktop layout
+                const totalSlides = Math.ceil(visibleCards.length / itemsPerSlide);
                 
-                sliderTrack.appendChild(slide);
-                filteredSlides.push(slide);
+                for (let i = 0; i < totalSlides; i++) {
+                    const slide = document.createElement('div');
+                    slide.className = 'slider-slide';
+                    slide.style.display = 'grid';
+                    slide.style.gap = '2rem';
+                    slide.style.gridTemplateColumns = `repeat(${itemsPerSlide}, 1fr)`;
+                    
+                    const startIndex = i * itemsPerSlide;
+                    const endIndex = startIndex + itemsPerSlide;
+                    const slideCards = visibleCards.slice(startIndex, endIndex);
+                    
+                    slideCards.forEach(card => {
+                        const cardClone = card.cloneNode(true);
+                        slide.appendChild(cardClone);
+                    });
+                    
+                    sliderTrack.appendChild(slide);
+                    filteredSlides.push(slide);
+                }
             }
             
-            // Update slider dimensions and position
-            sliderWidth = filteredSlides.length * 100;
-            sliderTrack.style.width = `${sliderWidth}%`;
+            sliderTrack.style.width = `${filteredSlides.length * 100}%`;
             updateSlider();
-            updateButtonStates();
         }
         
         function updateSlider() {
@@ -296,17 +425,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-
-
-
-
-
-
-
-
-
-
-
 
 /*===== FILTER FUNCTIONALITY FOR NON-SLIDER SECTIONS =====*/
 document.addEventListener('DOMContentLoaded', function() {
@@ -342,4 +460,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize filters for non-slider sections if needed
-});
+});     
