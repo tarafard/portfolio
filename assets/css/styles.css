@@ -672,13 +672,13 @@ img {
   background-color: var(--second-color);
   color: #fff;
   padding: 2rem 0;
-  transition: background-color 0.4s ease;
 }
 
 .footer__container {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  gap: 1.5rem;
   max-width: 1024px;
   margin: 0 auto;
   padding: 0 1rem;
@@ -686,22 +686,46 @@ img {
 
 .footer__nav {
   display: flex;
-}
-
-.footer__list {
-  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1.5rem;
+  width: 100%;
+  overflow-x: auto; /* Allows horizontal scrolling if needed */
+  padding-bottom: 0.5rem; /* Space for scrollbar */
 }
 
 .footer__link {
   color: #fff;
   font-weight: var(--font-semi);
-  transition: color 0.3s;
+  white-space: nowrap; /* Prevents text from wrapping */
+  padding: 0.25rem 0;
 }
 
-.footer__link:hover {
-  color: var(--first-color);
+/* For larger screens */
+@media (min-width: 768px) {
+  .footer__container {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .footer__nav {
+    justify-content: flex-end;
+    width: auto;
+  }
 }
+
+/* Dark mode */
+.dark-mode .footer {
+  background-color: var(--card-bg-dark);
+}
+
+.dark-mode .footer__link {
+  color: var(--text-color-dark);
+}
+
+
+
+
 
 /*===== BACK TO TOP BUTTON =====*/
 .back-to-top {
