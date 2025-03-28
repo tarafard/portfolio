@@ -808,12 +808,12 @@ body.dark-mode {
 
   /* Dark mode specific styles for mobile menu */
   .dark-mode .nav__menu {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: #ffffff !important; /* White background */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
 
   .dark-mode .nav__link {
-    color: var(--text-color-dark);
+    color: #000000 !important; /* Black text */
   }
 
   .dark-mode .nav__link:hover::after,
