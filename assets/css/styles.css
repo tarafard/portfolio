@@ -787,18 +787,42 @@ body.dark-mode {
   }
 }
 
+/*===== NAV =====*/
 @media screen and (max-width: 767px) {
   .nav__menu {
     position: fixed;
     top: var(--header-height);
     right: -100%;
-    width: 80%;
-    height: 100%;
+    width: 40%; /* Increased from 40% for better mobile usability */
+    height: calc(100vh - var(--header-height));
     padding: 2rem;
     background-color: var(--second-color);
     transition: 0.5s;
+    z-index: var(--z-fixed);
+    overflow-y: auto;
+  }
+  
+  .nav__menu.show {
+    right: 0;
+  }
+
+  /* Dark mode specific styles for mobile menu */
+  .dark-mode .nav__menu {
+    background-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .dark-mode .nav__link {
+    color: var(--text-color-dark);
+  }
+
+  .dark-mode .nav__link:hover::after,
+  .dark-mode .active-link::after {
+    background-color: var(--first-color);
   }
 }
+
+
 
 @media screen and (min-width: 768px) {
   body {
@@ -1044,14 +1068,13 @@ body.dark-mode {
 
 
 
-
-/*===== SLIDER LAYOUT =====*/
+/*===== SLIDER STYLES =====*/
 .slider-container {
   position: relative;
   width: 100%;
   max-width: 1024px;
   margin: 0 auto;
-  padding: 0 3rem;
+  padding: 0 1rem;
   overflow: hidden;
 }
 
@@ -1059,51 +1082,177 @@ body.dark-mode {
   display: flex;
   transition: transform 0.5s ease;
   will-change: transform;
-  min-height: 400px; /* Prevent height jump during filtering */
+  min-height: auto;
 }
 
 .slider-slide {
   flex: 0 0 100%;
   min-width: 100%;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
   box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.card {
+  width: 100%;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card__image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 60%; /* 3:2 aspect ratio */
+  overflow: hidden;
+}
+
+.card__image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card__content {
+  padding: 1rem;
+}
+
+.card__title {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.card__description {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.8);
+  color: #333;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.slider-arrow.prev-arrow {
+  left: 5px;
+}
+
+.slider-arrow.next-arrow {
+  right: 5px;
 }
 
 /* Responsive adjustments */
-@media (max-width: 900px) {
-  .slider-container {
-    padding: 0 2.5rem;
+@media (min-width: 600px) {
+  .slider-slide {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    padding: 0 1rem;
   }
-}
-
-@media (max-width: 600px) {
-  .slider-container {
-    padding: 0 1.5rem;
+  
+  .card__content {
+    padding: 1.25rem;
+  }
+  
+  .card__title {
+    font-size: 1.1rem;
   }
   
   .slider-arrow {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
   }
 }
 
-/* Slider arrow hover effects */
-.slider-arrow:not(:disabled):hover {
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+@media (min-width: 900px) {
+  .slider-slide {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  
+  .slider-arrow {
+    width: 60px;
+    height: 60px;
+  }
 }
 
-/* Smooth transitions for cards */
-.card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+/* Dark mode adjustments */
+.dark-mode .card {
+  background-color: #1e1e1e;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-/* Loading state */
-.slider-track.loading {
-  opacity: 0.7;
-  pointer-events: none;
+.dark-mode .card__description {
+  color: #aaa;
 }
+
+.dark-mode .slider-arrow {
+  background: rgba(30,30,30,0.8);
+  color: #fff;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Mobile-specific adjustments */
+@media (max-width: 480px) {
+  .card__content {
+    padding: 1rem;
+  }
+  
+  .card__title {
+    font-size: 1rem;
+  }
+  
+  .card__description {
+    font-size: 0.85rem;
+  }
+  
+  .filter-buttons {
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+  
+  .filter-btn {
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+
+
+
+
 
 
 
@@ -1279,3 +1428,61 @@ body.dark-mode {
 
 
 
+
+
+/*===== MOBILE SLIDER ADJUSTMENTS =====*/
+@media (max-width: 600px) {
+  .slider-container {
+    padding: 0; /* Remove extra padding */
+    display: flex;
+    justify-content: center; /* Center the slider */
+    overflow: hidden; /* Prevent extra spacing */
+  }
+
+  .slider-slide {
+    display: flex;
+    justify-content: center; /* Center content */
+    gap: 1.5rem;
+    padding: 0;
+    width: 100%; /* Ensure full width */
+  }
+
+  .card {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .card__image-container {
+    padding-top: 50%;
+  }
+
+  .card__content {
+    padding: 1rem;
+  }
+
+  .card__title {
+    font-size: 1rem;
+  }
+
+  .card__description {
+    font-size: 0.85rem;
+  }
+
+  /* Make arrows more mobile-friendly */
+  .slider-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 400px) {
+  .card {
+    max-width: 280px;
+  }
+  
+  .card__image-container {
+    padding-top: 45%;
+  }
+}
